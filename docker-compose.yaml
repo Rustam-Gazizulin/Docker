@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+    image: rgazizulin/skypro_test1
+    ports:
+      - 80:80
+    volumes:
+      - ./docker_config.py:/code/default_config.py
+    depends_on:
+      pg:
+        condition: service_started
+      migrations:
+        condition: service_completed_successfully
+  migrations:
+    build:
+      context: .
+    image: rgazizulin/skypro_test1
+    volumes:
+      - ./docker_config.py:/code/default_config.py
+    depends_on:
+      pg:
+        condition: service_started
+    command: flask db upgrade
+  pg:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: rustam
+      POSTGRES_PASSWORD: parol
+      POSTGRES_DB: my_base
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg-isready -U pstgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
